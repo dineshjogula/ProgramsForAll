@@ -1,0 +1,234 @@
+
+
+#include <iostream>
+#include <string.h>
+
+using namespace std;
+
+struct Node
+{
+  Node* next;
+  int data;
+  Node **setOfpointers;
+  Node **backwardSetContainer;
+  int forwardsetCount;
+  int index;
+  int checkforRepeatAddr(Node * ptr)
+  {
+
+    for(int i=0;i<index;i++)
+    {
+        if(backwardSetContainer[i]->data == ptr->data)
+        {
+            return -1;
+        }
+    }
+    return 1;  
+  }
+  void insertsetofNodes(Node *nodeptr)
+  {
+     //cout<<"\nData:"<<data<<" Set:"; 
+     if(checkforRepeatAddr(nodeptr) == 1)  //(nodeptr->data!=data)
+     {
+        //cout<<"Inserting: "<<nodeptr->data<<endl; 
+        backwardSetContainer[index]=nodeptr;
+        index++;
+     }
+  }
+  
+  int getBackwardIndex()
+  {
+    return index;
+  }
+  
+  void resetIndex()
+  {
+      static int flag = 0;
+      if(flag ==0)
+      {
+        index = 0;
+        flag=1;
+      }
+  }
+};
+
+ struct Node *startNode;
+
+
+void print(Node *head)
+{
+    if(head!=nullptr)
+    {
+        cout<< head->data;
+        if(head->forwardsetCount>0 || head->getBackwardIndex()>0)
+        {
+          int cond;    
+          if(head->forwardsetCount>0)
+          {
+            cond = head->forwardsetCount; 
+            cout<<"(";
+          for(int i=0;i<cond;i++)
+          {
+              cout<<head->setOfpointers[i]->data<<",";
+          }
+          }
+          else if(head->getBackwardIndex()> 0)
+          {
+              cond = head->getBackwardIndex();
+              //cout<<"\nBackwardIndex:"<<cond<<" ";
+              cout<<"(";
+                for(int i=0;i<cond;i++)
+                {
+                    cout<<head->backwardSetContainer[i]->data<<",";
+                }
+          }
+          cout<<")";    
+        }
+        cout<<"->";
+        print(head->next);
+    }
+    return;
+}
+
+Node* reverslist(Node *head, int nodeCount)
+{
+    Node *set[nodeCount];
+    if(head == nullptr)
+    {
+        return head;
+    }
+    
+    if(head->next==nullptr)
+    {
+        startNode = head;
+        if(head->forwardsetCount>0)
+        {
+            int count = 1;
+          for(int i=0;i<head->forwardsetCount;i++)
+          {
+              //cout<<"forwardsetCount:"<<head->forwardsetCount<<endl;
+              head->setOfpointers[i]->resetIndex();
+              head->setOfpointers[i]->insertsetofNodes(head);
+          }
+          head->forwardsetCount = 0;
+          delete head->setOfpointers;
+        }
+        return head;
+    }
+    else if(head->next!=nullptr)
+    {
+       
+       Node *tempNode = reverslist(head->next,nodeCount);
+        if(head->forwardsetCount>0)
+        {
+            int count = 1;
+          for(int i=0;i<head->forwardsetCount;i++)
+          {
+              //cout<<"forwardsetCount:"<<head->forwardsetCount<<endl;
+              head->setOfpointers[i]->resetIndex();
+              head->setOfpointers[i]->insertsetofNodes(head);
+          }
+          head->forwardsetCount = 0;
+          delete head->setOfpointers;
+        }
+       tempNode->next = head;
+       head->next = nullptr;
+       return head;
+    }
+}
+
+void insertSetOfPointersinNode(Node **nodearray,Node *head,int nodeCount)
+{
+    int nbrNodesinSet=0,inputindex=-1;    
+  if(head!=nullptr)
+  {
+     //startAgain:   
+     cout<<"Enter nbrOfNodes to insert in set: ";
+     cin>>nbrNodesinSet;
+     if(nbrNodesinSet <= nodeCount && nbrNodesinSet > 0)
+     {
+        //Node **p = head->setOfpointers;
+        for(int i=0;i<nbrNodesinSet;i++)
+        {
+            cout<<"Enter Node number from 1 to:"<<nodeCount<<" to insert ";
+            cin>>inputindex;
+            head->setOfpointers[i]=nodearray[inputindex-1];
+            head->forwardsetCount = i+1;
+        }
+     }
+     else
+     {
+         head->forwardsetCount = 0;
+     }
+     
+     
+     insertSetOfPointersinNode(nodearray,head->next,nodeCount);
+  }
+}
+
+void setMemorytoNull(Node *head,int nodeCount)
+{
+  for(int i=0;i<nodeCount;i++)
+  {
+    head->setOfpointers[i]=NULL;  
+    head->backwardSetContainer[i]=NULL;
+  }
+    
+}
+
+
+
+int main() {
+    // Write C++ code here
+int nbrOfNodes=0,inputValue=0; 
+Node *head = nullptr;
+cout<<"Enter number of Nodes:";
+cin>>nbrOfNodes; //scanning nbrOfNodes
+Node *pointerarr[nbrOfNodes]; //storing nbrOfNodes
+for (int i=0;i<nbrOfNodes;i++) {
+    Node **p;
+    if(head == nullptr)
+    {
+      head = (Node*)malloc(sizeof(Node));
+      pointerarr[i]=head;
+      head->next = nullptr;
+      cout<<"Enter input value"<<endl;
+      cin>>inputValue;
+      head->data = inputValue;
+      p = new Node*[nbrOfNodes];
+      head->setOfpointers = p;
+      head->backwardSetContainer = new Node*[nbrOfNodes];
+      setMemorytoNull(head,nbrOfNodes);
+    }
+    else
+    {
+        head->next = (Node*)malloc(sizeof(Node));
+        p = new Node*[nbrOfNodes];
+        head->setOfpointers = p;
+        head->backwardSetContainer = new Node*[nbrOfNodes];
+        setMemorytoNull(head,nbrOfNodes);
+        head = head->next;
+        cout<<"Enter input value"<<endl;
+        cin>>inputValue;
+        head->data = inputValue;
+	    head->next= nullptr;
+        pointerarr[i]=head;
+    }
+}
+Node **p = new Node*[nbrOfNodes];
+head->setOfpointers = p;
+head->backwardSetContainer = new Node*[nbrOfNodes];
+
+insertSetOfPointersinNode(pointerarr,*(pointerarr+0),nbrOfNodes);
+
+print(*(pointerarr+0));
+cout<<"\n"<<endl;
+reverslist(pointerarr[0],nbrOfNodes);
+print(startNode);
+
+
+
+
+
+    return 0;
+}
